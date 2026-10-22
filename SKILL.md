@@ -32,7 +32,11 @@ Published HRNet-W48/DarkPose reference results from `README.md`:
 - Git `origin`: Jack's GitHub fork
 - Explorer username: `gladowsky.j`
 - Explorer SSH alias: configured in `~/.ssh/config`; non-interactive key-based access verified (`hostname`: `explorer-01`, user: `gladowsky.j`)
-- Explorer code path: `/home/gladowsky.j/Infant-Pose-Estimation` (fork cloned)
+- Explorer code path: `/home/gladowsky.j/Infant-Pose-Estimation`; setup synchronized from the
+  fork at `8f4c497` on 2026-10-22 (check Git history for later documentation updates).
+  Original remote setup is preserved in a named Git stash; do not drop it automatically.
+- Effective read/write/traverse access verified for `/projects/aclab` on 2026-10-22. Confirm
+  this is the instructor-approved allocation and agree on a per-user path before creating anything.
 - Existing checkout-local `data/`, `models/`, and `output/` directories are in personal home;
   bulk downloads/installs are paused pending agreement on approved storage (see policy below)
 - GPU partition: `gpu` observed during setup; account/QOS and current GPU availability still need verification
@@ -126,7 +130,8 @@ Operational rules for this project:
 Storage plan (actual allocation still unconfirmed):
 
 - `/projects`: preferred persistent storage for environments/caches, datasets, checkpoints, and
-  retained results/logs. The exact writable allocation is TODO; do not assume access to all of it.
+  retained results/logs. `/projects/aclab` is writable by this account; instructor approval and
+  the exact per-user path remain unconfirmed. Access alone is not authorization.
 - `/home/$USER`: personal account storage, not shared system installation space. Earlier notes
   recorded a 75 GB quota; verify the actual quota with `check-quota`. Keep code/small tools here;
   further bulky use is paused pending storage agreement.

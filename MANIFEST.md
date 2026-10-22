@@ -27,8 +27,13 @@ checksums, versions, and run IDs whenever an artifact is obtained or produced.
   Earlier notes recorded a 75 GB home quota; verify current usage/limits from a compute allocation.
   Expected artifact paths below resolve relative to the existing checkout; no datasets or weights
   acquired yet. No environment migration or deletion has been performed.
-- Initial setup documentation and `.gitignore` were copied from the local checkout as uncommitted
-  changes. Local documentation was revised on 2026-10-22 and has not yet been resynchronized.
+- Setup/docs and the retrieved lockfile were committed and pushed to Jack's fork at `8f4c497`,
+  then fast-forwarded on Explorer on 2026-10-22. The remote checkout was clean after synchronization.
+- Original remote uncommitted setup is preserved in Git stash entry
+  `FiDIP setup preserved before fork sync 8f4c497` (`stash@{0}` when created); do not drop it automatically.
+- Effective read/write/traverse access to `/projects/aclab` is verified. Confirm instructor approval
+  and agree on the per-user path before creating directories or moving/installing anything.
+- `/courses/EECE7398.202710` exists but this account has no read/write/traverse access.
 - Latest read-only inspection found a dependency installation log and `uv.lock`; GPU validation
   and baseline evaluation remain unverified. No queued jobs were observed.
 

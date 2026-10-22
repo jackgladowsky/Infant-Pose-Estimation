@@ -48,16 +48,16 @@ Use the actual checked-in entry points and this project's uv specification inste
 
 ## Current readiness (2026-10-22 review)
 
-- Local documentation, lockfile, and environment-check scripts are prepared for publication;
-  check Git status/history for the latest commit and synchronization state.
+- Setup/docs, lockfile, and environment-check scripts were published to Jack's fork and
+  synchronized on Explorer at `8f4c497`. Check Git history for later documentation updates.
 - Latest read-only Explorer inspection found `uv.lock` and an installation log listing installed
   dependencies; no `uv sync` process or queued jobs was observed. GPU readiness is unverified.
 - SyRIP data and weights remain missing per the manifest; baseline evaluation is not started.
 - Before training, verify NMS GPU-target compatibility, pretrained initialization, domain-adaptation
   settings, and full checkpoint/resume behavior. See `SKILL.md` for the specific code findings.
-- Next: publish reviewed setup to Jack's fork, preserve remote changes and synchronize, then
-  confirm approved storage before environment changes or GPU validation. Obtain data/weights and
-  reproduce the evaluation baseline afterward.
+- Next: confirm `/projects/aclab` is the instructor-approved allocation and agree on a per-user
+  path before environment changes or GPU validation. Effective access is verified, but no project
+  directories were created. Obtain data/weights and reproduce the evaluation baseline afterward.
 
 ---
 
@@ -234,5 +234,13 @@ metrics. Verify training initialization/adaptation and complete resumability bef
   interpreter under the account's `.local/share/uv/python`. Runtime usability is still unverified.
 - No queued jobs observed. Groups include `aclab`; SLURM accounts include `ostadabbas`,
   `eece5640.202630`, and `y.bart`. These are inventory facts, not approval to use a given allocation.
-- Preparing reviewed setup/docs and lockfile for an authorized commit/push; preserve Explorer's
-  uncommitted setup before pulling. Confirm the course/PI storage location before further installs.
+- Committed and pushed 14 setup/documentation/lockfile paths to Jack's fork as `8f4c497`
+  (`Set up FiDIP research context and locked uv environment`). Local syntax/TOML/shell and
+  whitespace checks passed; the lockfile resolves 52 package entries and matches the remote SHA-256.
+- Preserved Explorer's original tracked/untracked setup in the named stash
+  `FiDIP setup preserved before fork sync 8f4c497`, then pulled with `--ff-only`. Remote HEAD matched
+  `8f4c497`, status was clean, the lockfile checksum was unchanged, and the notebook symlink resolved.
+- Verified effective read/write/traverse access to `/projects/aclab` (also other group allocations);
+  `/courses/EECE7398.202710` is inaccessible. Access alone is not course/PI approval to use storage.
+- Next decision for Jack: confirm `/projects/aclab` is the appropriate allocation and agree on the
+  per-user project path. No project directories created, environments installed/moved, or jobs submitted.
