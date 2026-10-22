@@ -60,6 +60,15 @@ This is an official pytorch implementation of [*Invariant Representation Learnin
 | Pose-MobileNet + FiDIP | MobileNetV2 | 224x224 | 3.91M | 0.46 | **79.2** | 99.0 | 89.4 | 84.1 | 99.0 | 92.0 |
 
  
+## Local project workflow
+
+For this fork's research workflow, start with [AGENTS.md](AGENTS.md) (project context and lab
+notebook), [SKILL.md](SKILL.md) (Explorer operations), [ENVIRONMENT.md](ENVIRONMENT.md) (the
+preferred uv setup and validation status), and [MANIFEST.md](MANIFEST.md) (inputs and results).
+`AGENT.md` links to `AGENTS.md` to retain the course-required notebook filename.
+The Mac checkout is for development; CUDA builds, evaluation, and training run in Explorer GPU
+allocations. The original upstream setup instructions below are retained for reference.
+
 ## Environment
 The code is developed using python 3.12 with CUDA 12.1 on Ubuntu 18.04. NVIDIA GPUs are needed. The code is developed and tested using one NVIDIA TITAN Xp GPU card. Other platforms or GPU cards are not fully tested.
 
