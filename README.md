@@ -65,7 +65,9 @@ This is an official pytorch implementation of [*Invariant Representation Learnin
 For this fork's research workflow, start with [AGENTS.md](AGENTS.md) (project context and lab
 notebook), [SKILL.md](SKILL.md) (Explorer operations), [ENVIRONMENT.md](ENVIRONMENT.md) (the
 preferred uv setup and validation status), and [MANIFEST.md](MANIFEST.md) (inputs and results).
-`AGENT.md` links to `AGENTS.md` to retain the course-required notebook filename.
+`AGENTS.md` is the sole project notebook; the former `AGENT.md` alias has been removed.
+This documentation records a validated working checkout; its runtime compatibility fixes and
+additional validation/SLURM helpers remain unpublished. See `ENVIRONMENT.md` before using a fresh clone.
 The Mac checkout is for development; CUDA builds, evaluation, and training run in Explorer GPU
 allocations. The original upstream setup instructions below are retained for reference.
 
