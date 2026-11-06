@@ -55,6 +55,17 @@ def locate_cuda():
     return cudaconfig
 CUDA = locate_cuda()
 
+# V100 by default; retain PTX for forward-compatible execution. Override explicitly
+# with NMS_CUDA_ARCH=80 for an A100 build. Compiling does not require an allocated GPU.
+cuda_arch = os.environ.get('NMS_CUDA_ARCH', '70')
+if not cuda_arch.isdigit():
+    raise ValueError('NMS_CUDA_ARCH must be a numeric CUDA capability, e.g. 70 or 80')
+cuda_codegen = [
+    f'-gencode=arch=compute_{cuda_arch},code=sm_{cuda_arch}',
+    f'-gencode=arch=compute_{cuda_arch},code=compute_{cuda_arch}',
+]
+print(f'NMS CUDA target: sm_{cuda_arch} + compute_{cuda_arch} PTX', flush=True)
+
 
 # Obtain the numpy include directory.  This logic works across numpy versions.
 try:
@@ -125,12 +136,13 @@ ext_modules = [
         # we're only going to use certain compiler args with nvcc and not with
         # gcc the implementation of this trick is in customize_compiler() below
         extra_compile_args={'gcc': ["-Wno-unused-function"],
-                            'nvcc': ['-arch=sm_61',
+                            'nvcc': cuda_codegen + [
                                      '--ptxas-options=-v',
                                      '-c',
                                      '--compiler-options',
                                      "'-fPIC'"]},
-        include_dirs = [numpy_include, CUDA['include']]
+        # Generated C++ may live under build/temp rather than alongside this header.
+        include_dirs = [numpy_include, CUDA['include'], os.path.dirname(os.path.abspath(__file__))]
     ),
 ]
 

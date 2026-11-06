@@ -89,15 +89,16 @@ def main():
         cfg, is_train=False
     )
 
-    if cfg.TEST.MODEL_FILE:
-        logger.info('=> loading model from {}'.format(cfg.TEST.MODEL_FILE))
-        model_p.load_state_dict(torch.load(cfg.TEST.MODEL_FILE), strict=False)
-    else:
-        model_state_file = os.path.join(
-            final_output_dir, 'final_state.pth'
-        )
-        logger.info('=> loading model from {}'.format(model_state_file))
-        model_p.load_state_dict(torch.load(model_state_file))
+    model_state_file = cfg.TEST.MODEL_FILE or os.path.join(
+        final_output_dir, 'final_state.pth'
+    )
+    logger.info('=> loading model from {}'.format(model_state_file))
+    # Require tensor-only weights and exact coverage; never silently evaluate a
+    # partially initialized network or execute arbitrary checkpoint pickle code.
+    model_p.load_state_dict(
+        torch.load(model_state_file, map_location='cpu', weights_only=True),
+        strict=True
+    )
 
     model_p = torch.nn.DataParallel(model_p, device_ids=cfg.GPUS).cuda()
 

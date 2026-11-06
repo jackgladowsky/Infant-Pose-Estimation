@@ -1,0 +1,26 @@
+{
+  "job_id": "11450265",
+  "checkpoint_check_job": "11450222",
+  "checkpoint": "models/hrnet_fidip.pth",
+  "checkpoint_sha256": "bfbf9df225674614652d5dbdd066daf71c9b9d7f3c31976b7ed33bb96af55d07",
+  "annotation": "data/syrip/annotations/person_keypoints_validate_infant.json",
+  "annotation_sha256": "8b299a879a95913483498e3f2115a826ac23ebc5262c3efb8d65f63718e3194c",
+  "test_images": 100,
+  "predictions": "output/baseline-test100-11450265/syrip/adaptive_pose_hrnet/w48_384x288_adam_lr1e-3_infant/results/keypoints_validate_infant_results_0.json",
+  "metrics": {
+    "AP": 0.936071706887983,
+    "AP50": 0.9852475247524751,
+    "AP75": 0.9852475247524751,
+    "AP_medium": -1.0,
+    "AP_large": 0.936071706887983,
+    "AR": 0.946,
+    "AR50": 0.99,
+    "AR75": 0.99,
+    "AR_medium": -1.0,
+    "AR_large": 0.946
+  },
+  "AP_percent": 93.6071706887983,
+  "published_reference_AP_percent": 93.6,
+  "config": "experiments/coco/hrnet/w48_384x288_adam_lr1e-3_infant.yaml",
+  "inference_changes": "none; GT boxes/flip/postprocess preserved; only debug rendering/log frequency/output paths overridden"
+}

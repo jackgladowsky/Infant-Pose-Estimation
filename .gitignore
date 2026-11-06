@@ -58,6 +58,17 @@ slurm-*.out
 *.pt
 *.ckpt
 
+# Only the final report is published; authoring files remain local.
+/report/
+
+# Local packaging/review artifacts, not part of the lean source publication.
+/reproducibility/*.zip
+/reproducibility/source_manifest.json
+/reproducibility/FINAL_REVIEW.md
+/reproducibility/unit-test-results.txt
+/reproducibility/validation-summary.txt
+/reproducibility/historical_runtime/
+
 # Applications
 *.app
 *.exe
