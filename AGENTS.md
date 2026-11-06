@@ -15,24 +15,29 @@
   Use compute allocations for installs/builds/evaluation/training; never run heavy work on login
   nodes. Prefer short `sbatch` jobs; interactive `srun` is optional for debugging. Request GPUs only
   when needed and chain checkpointed stages rather than defaulting to 24-hour jobs.
-- Any A100 or V100 variant is approved; choose a suitable/available one and record the actual
-  GPU. Rough training rank: H200 > A100 > V100 SXM2 > V100 PCIe > T4, but H200 is wasteful here.
-  Always submit typed GRES requests; no H200/unapproved GPU types without explicit permission.
+- Any A100 or V100 variant is approved. Current policy (2026-11-01): H100/H200 are also conditionally
+  approved for training/fine-tuning only if eligible capacity is readily available without a long
+  queue; otherwise use A100/V100 rather than waiting for a larger GPU. Check live availability
+  before selecting a type; installed inventory is not free capacity. Always submit typed GRES and
+  record the actual allocation. This does not broaden small smoke-check defaults or approve other types.
 - Jack chose `/home/gladowsky.j` (75 GB limit), including the existing checkout and `.venv`.
   Do not use `/projects/aclab` or other group allocations or create/request a project allocation
   without approval. Inspect quota and existing dependencies in a read-only CPU job before installing.
   `/scratch` is for running jobs only; persist needed outputs to home before jobs end.
 - Do not confuse the parent `eece7373/.venv` notebook environment with this project's separate
   Linux/CUDA environment. Do not run this project's `uv sync` on macOS.
+- Only the top-level `FiDIP_Report.pdf` is eligible for report-related publication; the entire
+  `report/` directory stays local. This is reproduction using the authors' provided code/model, not a new
+  architecture or backbone comparison. No additional experiments or bonus claims are planned.
 - Keep secrets in gitignored `.env` files; never expose their values. Keep datasets and weights
   outside Git. Confirm before canceling jobs or deleting artifacts.
 - Inspect both local and remote diffs before synchronization; preserve/review `uv.lock`
   (retrieved locally from Explorer with matching checksum on 2026-10-22).
   Do not blindly copy over the Explorer checkout or commit/push without user approval.
-- Publication scope approved 2026-10-28: documentation only. Keep compatibility fixes, modified
-  runtime code, tests, and new cluster helper scripts in the working checkouts unless Jack explicitly
-  changes this decision. Stage named documentation paths only; never `git add .` or `git add -A`.
-  The verified baseline used those unpublished changes, so a fresh GitHub clone is not equivalent.
+- Jack authorized publishing the reviewed lean source release: ML code, tests/configs, required
+  docs, recorded results and the top-level final PDF. This supersedes the earlier documentation-only
+  restriction. Stage only named, reviewed paths; never `git add .` or `git add -A`. Do not add local
+  authoring assets, data/weights, full audit logs or compiled binaries. Preserve the Explorer runtime.
 - Record hypotheses, exact commands, configs, code revisions, inputs, run IDs, metrics, failures,
   and conclusions here as work happens. Update `MANIFEST.md` for produced/acquired artifacts
   and the active-runs table in `SKILL.md` for jobs.
@@ -43,8 +48,9 @@ The course requires baseline reproduction, controlled attempts to improve accura
 failed attempts), and a final report covering baseline results, experiments, best configuration,
 and reflection on the agentic workflow. Root deliverables are `SKILL.md`, `AGENT.md`, and
 `MANIFEST.md`. `AGENTS.md` is the sole canonical context/notebook. Jack explicitly requested
-removal of the former `AGENT.md` compatibility symlink on 2026-10-28. The course's singular-name
-requirement is recorded here for final submission review; do not recreate the alias automatically.
+removal of the former `AGENT.md` compatibility symlink on 2026-10-28. In the user-authorized
+2026-11-05 final-review cleanup, an ordinary short `AGENT.md` entry-point document was added
+for the course requirement; it links here and is not a restored symlink or duplicate notebook.
 
 Local course references (outside this Git repository; may not exist on Explorer):
 
@@ -60,7 +66,7 @@ Some course examples mention files absent from this checkout (alternative Conda 
 `gpu_test.py`, and demo scripts). GPU recipes are generic examples, not validated FiDIP pins.
 Use the actual checked-in entry points and this project's uv specification instead.
 
-## Current readiness (2026-10-28 review)
+## Current readiness (2026-11-01)
 
 - Setup/docs, lockfile, and environment-check scripts were published to Jack's fork and
   synchronized on Explorer at `8f4c497`. Check Git history for later documentation updates.
@@ -68,7 +74,11 @@ Use the actual checked-in entry points and this project's uv specification inste
   imports, tiny CPU matmul, and dependency consistency. Home quota reports 0.01 / 0.07 TiB
   used/limit (rounded). No reinstall needed. Revised CPU/V100 smoke checks passed (`11308338`,
   `11308377`), then full data validation passed. Original pretrained Test100 evaluation reproduced
-  published rounding in `11450265`: 93.6071706887983 AP percent (published 93.6). Training has not run.
+  published rounding in `11450265`: 93.6071706887983 AP percent (published 93.6). A diagnostic
+  training/resume pilot passed (`11553500`). Three prespecified tests now completed in `11553889`:
+  head-only AP93.54721, stage4+head AP93.19864, original flip-off AP91.91587. Two follow-up
+  diagnostics (`11556720`) also completed: BN restoration AP93.35239, fixed crop-TTA AP93.32060.
+  Original93.60717 remains best. No active jobs; stop after the agreed bounded tests.
 - Both SyRIP ZIPs were moved from Downloads into local gitignored `data/archives/`, extracted
   intact under `data/raw/`, and linked as `data/syrip/`. All 7,657 images decode; original Test100
   is baseline-ready (100 samples). Training is NOT yet clean: 46 dimension mismatches in the
@@ -84,9 +94,10 @@ Use the actual checked-in entry points and this project's uv specification inste
   validation ended TIMEOUT with a CPU-NMS dtype failure (CUDA matmul passed). Local compatibility
   fixes are synced and compiled CPU-NMS retest `11308338` passed all fixtures (script output).
   Revised typed-V100 check `11308377` COMPLETED `0:0`, all checks PASS, no longer queued.
-  Data, weights, and baseline evaluation are now in place. Documentation-only publication is
-  approved; runtime compatibility fixes/helpers remain unpublished by request. Next: agree on
-  training repairs/leakage policy and controlled experiments.
+  Data, weights, and baseline evaluation are in place. Source publication was subsequently
+  authorized separately; historical entries retain the publication status at run time. User approved a
+  separate 1,150-record exclusion selection for the completed three-test screen; originals unchanged.
+  Next: interpret/write up the results, not launch extra training without a new request.
   SLURM dependencies sequence jobs; Bayesian optimization also requires an optimizer proposing trials.
 
 ---
@@ -617,3 +628,226 @@ metrics. Verify training initialization/adaptation and complete resumability bef
   datasets, checkpoints, logs, or output payloads are included.
 - Publication does not authorize a remote checkout reset/pull, alias deletion on Explorer, or new
   jobs. Preserve the working Explorer runtime and its uncommitted changes during later syncs.
+
+## Fine-tuning screen proposal and conditional Hopper permission (current as of 2026-11-01)
+
+- Discussed five independent short continuations from the verified FiDIP pose checkpoint: natural-
+  mixture low-LR control, 1:1 real/synthetic sampling, final-stage/head-only updates (earlier layers
+  and their BatchNorm stats frozen), mild photometric augmentation, and mixed-to-real curriculum.
+  These are proposals, not launched runs. Training-data review and initialization/resume validation
+  remain prerequisites. Keep the Test100 protocol fixed and establish development validation.
+- Planning budget is roughly 500–1,000 optimizer steps per run with equal-step comparisons;
+  about 1–3 GPU-hours for the first five-run screen is unmeasured, not a throughput guarantee.
+  First measure step time/VRAM in a short pilot; preparation, queueing, and repeat seeds are extra.
+- Jack explicitly permits H100/H200 for training/fine-tuning if available without a long wait.
+  Prefer readily available eligible capacity; otherwise fall back to A100/V100. No live Hopper
+  availability/compatibility has been established. Historical H200 smoke-test restrictions remain
+  the record of earlier decisions, not a prohibition on this newly approved training use.
+- Updated local current GPU policy in AGENTS/SKILL/environment notes only. No commit/push,
+  remote synchronization, job submission, cancellation, or training was performed for that policy update.
+
+## 2026-11-01 — Training audit and diagnostic pilot
+
+- Jack authorized proceeding with a short pilot and conditionally permits H100/H200 when available
+  without a long wait. Runtime changes stay unpublished; no new Git commit/push is authorized.
+- Read the actual training path before experiments. Correction to the earlier sampling proposal:
+  `BalancedBatchSampler` already alternates real/synthetic 1:1; the raw 200/1,000 record ratio is
+  not the author's effective batch ratio. Do not claim changing to 1:1 as a new improvement.
+  The author script also freezes the first 109 parameter tensors by index but not their BN stats;
+  restart omits domain optimizer/scheduler and RNG/sampler state. Lambda zero still runs a random
+  domain classifier, so the diagnostic explicitly uses supervised pose loss only.
+- Added unpublished `tools/audit_finetune_readiness.py`, `tools/audit_finetune.sbatch`,
+  `tools/pilot_finetune.py`, `tools/pilot_finetune.sbatch`, and `tests/test_finetune_pilot.py`.
+  Three CPU unit tests cover RNG restoration, exact model/Adam continuation, protocol mismatch,
+  checkpoint overwrite refusal, and state fingerprints. No new dependencies installed.
+- CPU audit `11553238` COMPLETED `0:0` on `d1027`: script 25s, allocation accounting 92s.
+  Rehashed model/train/Test100 annotations and image payloads against the preserved Mac manifest.
+  Unchanged findings: 46 synthetic dimension mismatches and 4 real train/Test100 byte overlaps.
+  Candidate unflagged population: 1,150 (196 real, 954 synthetic), not yet an approved experiment split.
+- Admission selects only 16 real + 16 synthetic verified, non-overlapping examples for a diagnostic
+  smoke test. No raw/working annotations, labels, images, or splits were edited/deleted. The pilot
+  is not a five-experiment result and does not score Test100. Explicit approval is still needed
+  before excluding the flagged 50 samples in scientific comparison runs and fixing validation policy.
+- CPU report `output/finetune-readiness-11553238.json`; stdout `slurm-logs/train-audit-11553238.out`.
+  Retrieved both via xfer to `log/finetune-evidence-2026-11-01/`.
+- Live H200 inventory showed spare GPUs but scheduling forecasts were long; no H200 job submitted.
+  Selected V100 on public `gpu-short` (2h partition maximum), explicit `gpu:v100-sxm2:1`, 4 CPUs,
+  8 GB host RAM override, 5m job limit, and deadline now+7m (latest start within about 2m).
+  Submitted diagnostic `11553500`; started within ~34s on `d1019`, V100-SXM2-32GB.
+- Diagnostic plan: 50 FP32 optimizer updates, batch 8, Adam LR 1e-5, deterministic algorithms,
+  TF32 off, existing geometry/normalization/loss, workers=0 for reproducible augmentation RNG.
+  Save pose+Adam+RNG+global step/protocol, compare 3 uninterrupted steps against 3 restored steps.
+  Original checkpoint is hashed before/after and never overwritten. New pilot checkpoint stays home.
+- Pilot `11553500` verified COMPLETED `0:0`, out of queue: allocation accounting 135s, script
+  56s, Python body 44.277s. All 50 training updates had finite loss/gradients; head weights changed.
+  Both 3-step branches matched exactly across pose/Adam/Python+NumPy+Torch+CUDA RNG state.
+  Source checkpoint hash unchanged. This validates the new diagnostic path, not the author's
+  incomplete adversarial-resume implementation and not any AP improvement.
+- Median steady step 0.3895523s at batch 8; compute-only extrapolation 500 steps 3.246m,
+  1,000 steps 6.493m. Peak allocated GPU 4.299 GiB, reserved 4.990 GiB; batch MaxRSS 1,492,904 KiB
+  (~1.424 GiB). Includes exhaustive gradient checks; tiny-subset timings do not establish full-data
+  I/O/validation/queueing time. V100 is adequate; no reason to wait for Hopper for this screen.
+- New `output/finetune-pilot-11553500/resume.pth` is 764,835,130 bytes, diagnostic pose+Adam+RNG
+  state at step 50, NOT a raw pose-only/best-model file for the evaluation CLI. It remains on Explorer.
+  `protocol.json` and `pilot-report.json` are beside it; stdout `slurm-logs/train-pilot-11553500.out`.
+  Retrieved reports/protocol via xfer to local `output/finetune-pilot-11553500/`; stdout/accounting
+  to `log/finetune-evidence-2026-11-01/`. Both audit/pilot jobs completed, no active jobs remain.
+- Proposed next decision, not yet applied: separate derived training profile excluding the 46
+  inconsistent examples and 4 exact Test100 overlaps, retaining 1,150 records (196 real/954 synthetic),
+  originals unchanged. Need explicit approval before these protocol-changing exclusions.
+- Revised five-run proposal: balanced 1:1 full-network control; 2:1 real-heavy; final-stage/head
+  only with frozen early BN stats; mild photometric augmentation; mixed-to-real curriculum.
+  A 600-step/batch-8 screen would allow the curriculum's first 400 steps balanced, last 200 real-only,
+  matching the total 3,200 real / 1,600 synthetic exposures of the fixed 2:1 trial. All runs start
+  independently from the original weights. No Test100 early stopping; choose/approve a development
+  and final-evaluation protocol explicitly before comparison runs. Prior exposure in released
+  weights remains a limitation even after exclusion from new fine-tuning.
+- Runtime source hashes are in job logs. No source/doc push, remote Git reset/pull, job cancellation,
+  full-data comparison training, label repair, source data removal, or Test100 model selection.
+
+## 2026-11-01 — Approved three-test screen (supersedes five-run proposal)
+
+- Jack cannot access expanded SyRIP and prefers minimal data-curation effort. After the automatic
+  exclusion list was explained, he approved the three proposed tests and then asked to continue.
+  This authorizes a separate 1,150-record selection manifest excluding 46 inconsistent-dimension
+  examples and 4 exact Test100 overlaps. Source releases, images, labels and Test100 remain unchanged.
+- Prespecified tests: (1) final prediction head only, (2) stage4 + final head, each independently
+  initialized from original FiDIP weights, 600 optimizer updates, batch8, Adam LR1e-5, seed7373,
+  exactly balanced real/synthetic sampling with replacement. Same step-indexed image batches and
+  geometric augmentation seeds; frozen modules/BatchNorm stats remain in eval mode and are hashed
+  before/after. No new domain classifier/adversarial objective; no Test100 early stopping.
+- (3) Disable flip testing on the ORIGINAL checkpoint, not a tuned checkpoint, to isolate the
+  inference tradeoff. Recheck original flip-on AP first; all evaluations use existing repo dataset,
+  decoder, flip-back, OKS rescoring/NMS and COCO metric code. Paired warmed GPU-forward timings
+  explicitly exclude preprocessing, transfers, flip-back and decoding; do not call this app speedup.
+- Added unpublished `tools/prepare_small_screen.py`, `tools/prepare_small_screen.sbatch`,
+  `tools/run_small_screen.py`, `tools/run_small_screen.sbatch`, `tests/test_small_screen.py`.
+  Local four screen tests and three prior resume tests passed, plus Python/Bash syntax and diff checks.
+  Runtime files transferred via xfer only, after asserting destination files did not already exist.
+- CPU prep `11553804` submitted once; all seven Linux tests, fresh payload/hash checks and approved
+  selection serialization passed. Script JOB_END rc0 after 18s; allocation subsequently reported
+  TIMEOUT with exit0:0 after 5m08s. Preserve this discrepancy; do not call the allocation COMPLETED.
+  Slurm remained RUNNING long after the successful script ended; cause not established. No duplicate
+  prep or job cancellation. Logs `slurm-logs/screen-prep-11553804.out`, approved manifest
+  `output/small-screen-profile-11553804.json`; xfer copies in `log/small-screen-evidence-2026-11-01/`.
+- After directly verifying successful CPU JOB_END and complete approved manifest, submitted GPU
+  `11553889` without a Slurm dependency on the anomalous CPU allocation. GPU independently verifies
+  all pinned inputs. One bounded 15-minute allocation, gpu-short, typed V100-SXM2, 4CPU/8G, deadline
+  now+17m; periodic 300/600-step checkpoints and immediate per-test results. Started on d1022.
+  No Hopper job submitted. GPU run now verified COMPLETED `0:0`, out of queue, allocation 6m45s,
+  script 6m18s, experiment stage 6m16s. Actual V100-SXM2-32GB on d1022; batch MaxRSS 3,476,404 KiB.
+  Original flip-on rechecked exactly 93.6071706887983 AP. All three tests completed successfully.
+- Head-only: AP 93.5472078062278, delta -0.05996288257050253 AP points, AR94.5, 833 trainable
+  parameters. Stage4+head: AP93.198637527681, delta -0.40853316111730464, AR94.3, 45,894,881
+  trainable parameters. Both completed 600 updates; frozen parameters/BN buffers hash-identical.
+  Training-step sums 126.514s / 166.470s; median steps 0.20023s / 0.27117s, respectively.
+- Original weights flip-off: AP91.9158670222938, delta -1.6913036665045098 AP points, AR93.4.
+  Nine paired warmed forward repeats at batch16: flip on 13.00666 ms/image, off 6.50483 ms/image,
+  speedup1.99954x. This is CNN-forward ONLY, excluding I/O/preprocess/transfers/flip-back/decoding;
+  do not claim 2x application speedup. Single-pass wall times 5.779s/3.516s are cache/order affected.
+- Neither fine-tune improved this one-seed screen; head-only is numerically close and no statistical
+  significance was established. Keep original weights as best tested checkpoint. No further jobs
+  are active or implied. These exploratory comparisons do not establish independent generalization
+  or show that every fine-tuning strategy fails; initial checkpoint prior exposure remains a limit.
+- Outputs `output/small-screen-11553889/{results.json,protocol.json,summary.md}`; per-case predictions
+  and head/stage4 final pose checkpoints plus 300/600-step resume states retained on Explorer.
+  Head final SHA256 `9a8f03f65328baceb05ce36a111d9d7b71337d182e4a59dbfa241ee4e5a667ff`;
+  stage4 final `b146f8c25d5c45f882603f858d1c532d054e1caedc687fedb41e154fd3be3f6e`.
+  Profile SHA256 `42c193dc87f62eb0ba1aba60544bd95e4a4575d651c80c0320a05fde9cf6edc7`.
+  Runtime runner SHA256 `3c44a515adbef57b2f913ab235ad27096c430eded53a705f7fa6227b92f0e722`.
+- Stdout/accounting/prep/profile logs copied via xfer to `log/small-screen-evidence-2026-11-01/`;
+  JSON results/protocols/predictions copied via xfer under the same local output run folder.
+  Large weights/resume states remain Explorer home only. No new source/doc push; Git HEAD remains
+  documentation commit `bc66664`. Source data and original checkpoint unchanged.
+- Single-seed fixed-budget comparisons are exploratory. Excluding overlaps in new fine-tuning cannot
+  undo possible prior exposure in the released weights. Report all outcomes, not only improvements.
+
+## 2026-11-02 UTC — Bounded follow-up diagnostics, then stop
+
+- Jack questioned whether more experiments justify compute. He authorized existing-artifact analysis
+  followed by only two inference-only variants: original-BN-buffer restoration on the saved stage4
+  model, and one fixed three-scale crop ensemble. No new training or unrestricted tuning authorized.
+- Prespecified crop factors 0.9/1.0/1.1 at fixed288x384, flip retained. Aligned heatmaps using the
+  actual repo affine transforms (width-1 convention), coverage-normalized uniform fusion before
+  the existing decoder. No scale sweep. BN experiment restores running_mean/running_var/counter
+  only; retains all trained parameters, including BN affine weights.
+- Added unpublished tools/{bounded_diagnostics.py,analyze_bounded_diagnostics.py,
+  run_bounded_diagnostics.py,analyze_bounded_diagnostics.sbatch,run_bounded_diagnostics.sbatch}
+  and tests/test_bounded_diagnostics.py. Local nine geometry/BN tests passed; Linux CPU tests9/9.
+  Full local suite26 tests passed with one GNU-timeout skip. No package installation/build.
+- CPU `11556695` COMPLETED0:0, 17s script/allocation, d1027,2CPU/4G. Fresh home quota0.02TiB used
+  /0.07TiB limit,43,514 inodes (rounded). Original/trained checkpoints safely loaded and hashed.
+  Saved predictions analyzed without new inference. Per-person OKS is not confidence-ranked AP.
+- Head-only per-person OKS correlation to original0.999928; all100 images within0.01OKS.
+  Stage4 correlation0.977266;5 images improved>=0.01,6 worsened>=0.01,89 near. BN393 buffers
+  changed across131 modules; some channel means shifted up to2.77 original std. Drift alone did
+  not prove causation; the GPU buffer-only intervention tested its conditional contribution.
+- GPU `11556720` COMPLETED0:0, out of queue, V100-SXM2-32GB/d1022,2CPU/8G, requested10m cap
+  with latest-start deadline. Actual allocation47s, script45s. One allocation, no retries/Hopper,
+  no new training. Matched original93.6071706887983 and trained93.198637527681 controls exact.
+- BN-restored AP93.35239311605797, +0.153755588376967 vs trained but -0.25477757274033763 vs
+  original. AR94.5. This supports normalization contributing to the observed degradation, not an
+  assertion that BN was the sole cause or that training with frozen BN will improve the baseline.
+- Fixed crop ensemble AP93.32060253033816, delta -0.28656815846014183 vs original, AR94.5.
+  It used600 forward-image views versus200; CNN time3.934s vs1.351s. Single-pass wall9.478s
+  vs3.682s is not a randomized app benchmark. This preset costs more and did not improve AP.
+- Original and trained checkpoint files unchanged. Preserved diagnostic BN-restored raw state at
+  output/bounded-diagnostics-11556720/BN_buffers_restored.pth, SHA256
+  fe0942279648bc817e450823bbf37adad4bae0fe3da7998e6cbd7b2787b664e8 (Explorer home only).
+- Reports/protocols/predictions via xfer to local output/bounded-diagnostics-11556720/;
+  human summary summary.md; CPU report/stdout/accounting evidence in
+  log/bounded-diagnostics-evidence-2026-11-02/. Analysis artifact on Explorer:
+  output/bounded-analysis-11556695.json. Runtime source hashes retained in logs/manifest.
+- Both hypotheses finished below original; stop at the agreed gate. No automatic follow-up
+  fine-tuning, scale search, dataset acquisition, source data changes, cancellation, commit or push.
+  These are exploratory follow-ups on a previously inspected small benchmark, not independent
+  proof of generalization or statistical significance. Original remains best of tested variants.
+
+## 2026-11-05 — Reproduction tooling and final result selection
+
+- Added the ordinary course-required AGENT.md entry point linking to canonical AGENTS.md.
+  Selected the original checkpoint in MANIFEST.md with actual run IDs, source-revision caveat,
+  config/data/model hashes, metrics and evaluation command. Corrected stale setup/training status.
+- Added safe asset preparation and offline/optional-COCO result checks under reproducibility/.
+  Original datasets and weights remain unchanged and outside Git.
+- Added diagnostic path/control arguments for new screen IDs: CPU analysis accepts
+  --screen-dir/--trained-sha256/--expected-trained-ap and corresponding FIDIP_DIAG_* sbatch
+  variables. GPU diagnostics use those pinned analysis fields. Historical defaults and metric/
+  inference math are unchanged. Local tests cover argument parsing and checkout-root boundaries;
+  this interface was not separately rerun on a GPU.
+- Tests cover safe extraction and overwrite/traversal/symlink/case-collision refusal, preservation
+  of existing data and the diagnostic argument guards. Recorded AP/final-step/freeze/control
+  consistency checks pass. The separate Mac environment lacks pycocotools, so optional six-way
+  COCO rescoring was not rerun or installed here; original Explorer evaluation evidence is retained.
+- No new pose-model training/inference, environment installation, Explorer access, data transfer,
+  SLURM job, cancellation, Git commit or push occurred during this cleanup.
+
+## 2026-11-05 — Lean publication scope
+
+- Jack approved preparing a lean publication of the actual ML source, tests/configs, required
+  documentation and recorded results, rather than every intermediate artifact.
+- Only the top-level FiDIP_Report.pdf is eligible for report-related publication. The report/
+  directory and local packaging/review artifacts are ignored and not to be force-added.
+- Documentation focuses on environment/data preparation, supplied model/code, baseline evaluation,
+  controlled experiments, metrics, limitations and AI-assisted ML work.
+- Small unchanged copies of the three main result JSONs are in reproducibility/results/ so offline
+  score checks do not depend on ignored output folders or document assets. Original prediction
+  files and full audit logs remain local; these are not supplied in a fresh Git clone.
+- A copy of the Git-visible ML source and recorded results passed the standalone consistency
+  check and all34 unit tests (33 passed/1 Mac GNU-timeout skip) without datasets, weights or a GPU.
+  This is an offline source check, not a new Linux/CUDA end-to-end evaluation.
+- Jack subsequently gave the go-ahead to commit and push this reviewed set to his fork. Preserve
+  the local/remote working runtimes and inspect differences before any future synchronization.
+
+## 2026-11-06 — Authorized lean source release
+
+- Jack explicitly authorized pushing the reviewed 46-path set to his fork. Fetched origin and
+  verified local master and origin/master matched at bc66664 before making publication commits.
+- Runtime commit 6aa9e7b38f31a6ee3bda85711c2aab045f8aebd5 contains39 named paths: ML fixes,
+  setup/evaluation/experiment helpers, tests, three unchanged metric JSONs and ignore rules.
+- Required scientific documentation and the top-level final PDF are prepared as a separate7-path
+  commit. No datasets, weights, raw prediction/audit outputs, compiled binaries or local authoring
+  assets are added. Historical entries retain the source/publication state at their original dates.
+- Pre-publication checks:34 unit tests (33 pass/1 Mac GNU-timeout skip), recorded-result consistency,
+  Python/JSON/shell checks, exact staged-path/credential-pattern checks and whitespace checks pass.
+  No new model runs or Explorer operations; its checkout is not automatically pulled or overwritten.

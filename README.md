@@ -65,11 +65,20 @@ This is an official pytorch implementation of [*Invariant Representation Learnin
 For this fork's research workflow, start with [AGENTS.md](AGENTS.md) (project context and lab
 notebook), [SKILL.md](SKILL.md) (Explorer operations), [ENVIRONMENT.md](ENVIRONMENT.md) (the
 preferred uv setup and validation status), and [MANIFEST.md](MANIFEST.md) (inputs and results).
-`AGENTS.md` is the sole project notebook; the former `AGENT.md` alias has been removed.
-This documentation records a validated working checkout; its runtime compatibility fixes and
-additional validation/SLURM helpers remain unpublished. See `ENVIRONMENT.md` before using a fresh clone.
-The Mac checkout is for development; CUDA builds, evaluation, and training run in Explorer GPU
-allocations. The original upstream setup instructions below are retained for reference.
+`AGENTS.md` remains the canonical notebook; [AGENT.md](AGENT.md) is the short course-required entry point.
+
+**Final result:** original HRNet FiDIP on original Test100, **93.6071706887983 AP**, matching the
+published 93.6 after rounding. All five bounded follow-ups remain below it; no bonus is claimed.
+
+Use [reproducibility/README.md](reproducibility/README.md) for evaluation commands and
+[reproducibility/results/](reproducibility/results/) for recorded metrics and protocols.
+The source includes compatibility fixes, experiment scripts, tests and configurations; datasets,
+weights and full audit logs remain external. The final write-up is
+[FiDIP_Report.pdf](FiDIP_Report.pdf).
+
+The Mac checkout is for development. Native builds, data admission and ML work
+use appropriate Explorer compute allocations (CPU when GPUs are unnecessary). The original
+upstream instructions below are retained for reference; the reproduction guide describes our runs.
 
 ## Environment
 The code is developed using python 3.12 with CUDA 12.1 on Ubuntu 18.04. NVIDIA GPUs are needed. The code is developed and tested using one NVIDIA TITAN Xp GPU card. Other platforms or GPU cards are not fully tested.

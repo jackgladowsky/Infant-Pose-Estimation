@@ -4,11 +4,15 @@ This is a Linux x86-64 CUDA environment, not a macOS environment. Original Conda
 for reference; `pyproject.toml` defines the smaller uv-managed training/evaluation environment.
 Synthetic-generation dependencies are separate and not installed here.
 
-**Publication scope:** this is a documentation-only update. The verified Explorer runtime uses
-unpublished NMS/build compatibility fixes, safe/strict checkpoint-loading changes, and validation/
-SLURM helpers retained in the Mac and Explorer working checkouts. These are intentionally not
-included in GitHub. Commands below describe those working checkouts, not a guarantee that a fresh
-clone runs unchanged. The uv specification/lockfile are published; data, weights, and raw logs are not.
+**Source release:** this release includes the NMS/build compatibility fixes, safe/strict
+checkpoint loading, validation/SLURM helpers, tests and recorded metric JSONs used for this study.
+It supersedes the earlier documentation-only publication. Datasets, weights, raw prediction files
+and full reference audits remain external; see the reproduction guide for command prerequisites.
+The local/offline checks passed, but no new clean-install Linux/CUDA end-to-end run is claimed.
+
+[reproducibility/README.md](reproducibility/README.md) describes the working source, input
+acquisition and evaluation commands. Recorded metrics/protocols are in `reproducibility/results/`;
+original datasets, weights and full reference-audit outputs remain external.
 
 ## Setup
 
@@ -89,12 +93,16 @@ The local fixes use matching `np.intp_t`/`np.intp` CPU indices, explicit thresho
 empty-input guard in GPU NMS. The build targets V100 (`sm_70`) plus forward-compatible PTX;
 `NMS_CUDA_ARCH=80` is an explicit A100 build option. Any A100 or V100 variant is approved:
 use a typed `--gres=gpu:a100:1` or `--gres=gpu:v100-pcie:1` command-line override when appropriate.
-Record the actual GPU; no extra permission is needed between these approved types. H200 remains
-excluded without explicit approval.
+Record the actual GPU; no extra permission is needed between these approved types. As of
+the current 2026-11-01 policy, Jack also conditionally approves H100/H200 for training/fine-tuning if readily available
+without a long queue; otherwise use A100/V100. This does not change the small smoke-check defaults.
+Live eligible Hopper capacity and training compatibility have not yet been verified; measure in a
+short pilot before extrapolating runtime or changing batch sizes.
 Inspect generated native-file diffs before synchronization and never publish generated binaries.
 
-V100 is suitable for these tiny checks. Full HRNet training memory/batch sizing still requires a
-pilot on the actually allocated card; the smoke test does not establish training throughput or fit.
+V100 passed these checks and the later pose-only batch-8 pilot/fine-tunes. The pilot used about
+4.3 GiB peak allocated GPU memory; this does not establish memory fit for the upstream full
+adversarial trainer or arbitrary batch sizes.
 
 ## Current setup status
 
@@ -152,7 +160,61 @@ GPU allocation 71s, script 64s. Full-precision metrics and provenance live at
 Workflow: `tools/check_checkpoint.sbatch` on CPU, then `tools/evaluate_baseline.sbatch` with an
 afterok dependency and `FIDIP_CHECKPOINT_JOB` exported. Both have 5-minute caps, no installs,
 resource/model/data admission checks, and timed stages. File copies always use xfer; SLURM
-submission/monitoring uses the Explorer login alias. Runtime/source changes remain uncommitted
-and are intentionally excluded from this documentation-only publication.
+submission/monitoring uses the Explorer login alias. The runtime fixes and helpers are included
+in this source release; the original model/data and private Explorer working checkout are unchanged.
+
+## Diagnostic training/resume pilot passed (2026-11-01)
+
+CPU audit `11553238` and GPU pilot `11553500` COMPLETED `0:0`. Pilot used V100-SXM2-32GB on
+d1019 (gpu-short, 4 CPUs, 8G host RAM, 5m cap); began ~34s after submission. H200 forecasts were
+long, so no Hopper job submitted. Source checkpoint and original datasets remained unchanged.
+
+Fifty supervised pose updates on 32 explicitly verified training examples had finite loss/gradients
+and changed weights. Saved/restored pose+Adam+RNG reproduced 3 uninterrupted steps exactly.
+Median steady step 0.38955s at batch 8, FP32/deterministic/TF32 off; peak GPU allocated 4.299 GiB,
+reserved 4.990 GiB; host MaxRSS ~1.424 GiB. Script 56s, allocation accounting 135s. Compute-only
+extrapolation is ~3.25m/500 steps or ~6.49m/1,000, not a full-data end-to-end runtime guarantee.
+Reports: `output/finetune-pilot-11553500/{protocol.json,pilot-report.json}` on both Mac/Explorer;
+~729 MiB diagnostic resume checkpoint stays Explorer home only. No Test100 scoring or AP improvement
+claim. The exclusion profile was subsequently approved for the completed screen below. The pilot
+and experiment helpers are included in this source release.
+
+## Three prespecified tests completed (2026-11-01)
+
+GPU `11553889` COMPLETED `0:0`, V100-SXM2-32GB/d1022, 4CPU/8G, 6m45s allocation / 6m18s
+script. Original flip-on control exactly matched 93.60717 AP. With 600 updates, batch 8, Adam 1e-5,
+seed 7373, head-only reached 93.54721 AP and stage4+head 93.19864 AP; frozen parameters/BN stats
+verified unchanged. Original-weight flip-off scored 91.91587 AP; paired warmed CNN-forward timing
+roughly halved (13.00666 to 6.50483 ms/image), NOT a 2x end-to-end application-speed claim.
+
+Both fine-tunes used the user-approved 1,150-record selection manifest (196 real/954 synthetic),
+with no source-label/image edits; same balanced sampling and geometry schedule. No Test100 early
+stopping, adaptive sweep, expanded data or new adversarial classifier. Single-seed exploratory
+results do not establish statistical significance; original weights remain best of these tests.
+
+CPU prep `11553804` passed seven Linux unit tests/data validation and exited rc0/18s, but allocation
+later reported TIMEOUT0:0/5m08s (batch later COMPLETED0:0). Lifecycle/accounting discrepancy retained,
+cause unverified. GPU independently verified the approved manifest and pinned input hashes.
+
+Results: `output/small-screen-11553889/{results.json,protocol.json,summary.md}`; predictions/protocols
+available on Mac and Explorer via xfer. Checkpoints retained in Explorer home only. No active jobs,
+new dependency installs or original-checkpoint changes. At run completion the source was still
+unpublished; its separate source release was authorized later.
+
+## Bounded inference follow-ups completed (2026-11-02 UTC)
+
+CPU analysis `11556695` COMPLETED0:0/17s; nine geometry/BN tests passed on Linux. Existing
+predictions and buffers analyzed without new inference;131 BN modules had393 changed buffers.
+GPU `11556720` COMPLETED0:0 on V100-SXM2-32GB/d1022,2CPU/8G,47s allocation/45s script,
+within one10m cap. No new training or repeated trials; original/trained control AP reproduced exactly.
+
+Restoring only original BN running buffers in the stage4-trained model reached93.35239 AP
+(+0.15376 vs trained, still -0.25478 vs original). Fixed0.9/1/1.1 crop TTA on original weights
+reached93.32060 AP (-0.28657), with triple forward-image views. Original93.60717 remains best.
+Crop fusion follows repo affine conventions and coverage normalization; no scale sweep.
+
+Reports/protocols/predictions/summary: `output/bounded-diagnostics-11556720/` on Mac and Explorer.
+Large diagnostic checkpoint stays Explorer home. Original data/weights unchanged, no active jobs,
+new installs, code pushes or further training. Stop at the agreed budget gate.
 
 See `SKILL.md` for training-specific initialization, adaptation, and resume caveats.

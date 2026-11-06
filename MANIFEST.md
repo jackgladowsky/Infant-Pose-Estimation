@@ -6,8 +6,13 @@ checksums, versions, and run IDs whenever an artifact is obtained or produced.
 **Documentation-only publication (2026-10-28):** the verified runs used compatibility fixes,
 modified evaluation code, and cluster/validation helpers retained in the Mac/Explorer working
 checkouts, intentionally not committed or pushed. References below inventory those working
-artifacts; they do not imply every script, report, or payload is available in a fresh GitHub clone.
-Runtime hashes identify the actual run inputs. Datasets, weights, binaries, and raw logs are excluded.
+artifacts; they do not imply every private dataset, checkpoint or audit output is in Git.
+That earlier source-publication restriction is superseded by the user-authorized lean source release.
+
+The lean source publication contains ML code, tests/configs, required documentation and the recorded
+results under `reproducibility/results/`. Follow `reproducibility/README.md` for input acquisition
+and evaluation commands. Runtime hashes identify actual run inputs; datasets, weights, compiled
+binaries and full audit logs remain external.
 
 ## Source repository
 
@@ -18,6 +23,7 @@ Runtime hashes identify the actual run inputs. Datasets, weights, binaries, and 
 | Official repository | `https://github.com/ostadabbas/Infant-Pose-Estimation.git` |
 | Starting branch | `master` |
 | Starting commit | `a76b4f4` |
+| Runtime source release | `6aa9e7b38f31a6ee3bda85711c2aab045f8aebd5` (fixes, drivers, tests, recorded metrics) |
 | License | Non-commercial use; see `README.md` |
 
 ## Explorer working directory
@@ -34,7 +40,8 @@ Runtime hashes identify the actual run inputs. Datasets, weights, binaries, and 
   Dataset files were copied through the required transfer node on 2026-10-28 and CPU-validated
   by `11449533` (COMPLETED `0:0`). Test100 assets are ready; training issues remain unchanged.
   The original HRNet checkpoint is now present and verified; baseline job `11450265` reproduced
-  93.6 AP (93.6071706887983 unrounded percent). No model training has run.
+  93.6 AP (93.6071706887983 unrounded percent). A pose-only pilot and two fixed-budget fine-tunes
+  subsequently completed; original adversarial training was not reproduced.
   `/scratch` is for running jobs only; persist retained outputs to home before a job ends.
 - Setup/docs and the retrieved lockfile were committed and pushed to Jack's fork at `8f4c497`,
   then fast-forwarded on Explorer on 2026-10-22. The remote checkout was clean after synchronization.
@@ -53,7 +60,8 @@ Runtime hashes identify the actual run inputs. Datasets, weights, binaries, and 
 - `.python-version`: Python 3.12; installed 3.12.14 verified by CPU inspection.
 - `.venv/`: CPU dependency/import checks and V100 native/CUDA/NMS/project/CLI smoke validation
   passed (`11308338`, `11308377`), followed by dataset validation and successful pretrained
-  Test100 evaluation (`11450265`). Training remains unverified/not started.
+  Test100 evaluation (`11450265`), then the verified pilot and controlled 600-step continuations.
+  This does not validate the upstream full adversarial trainer.
 - `uv.lock`: retrieved locally from Explorer on 2026-10-22 (41,582 bytes), with matching SHA-256
   `a9d18d4df5ab965229e9205e488b8b9938a773f3326db7c4bf281ad29dbfac4a`.
   Local/remote `pyproject.toml` SHA-256 also matches:
@@ -98,8 +106,8 @@ Runtime hashes identify the actual run inputs. Datasets, weights, binaries, and 
 ## Project context and course artifacts
 
 - `AGENTS.md`: canonical agent context and chronological research notebook.
-- `AGENT.md`: former compatibility symlink, removed at Jack's request on 2026-10-28. Use
-  `AGENTS.md`; review the course's singular-name requirement again for final submission.
+- `AGENT.md`: short ordinary Markdown course entry point added for final review (2026-11-05),
+  linking to canonical `AGENTS.md`; the former symlink remains removed.
 - `SKILL.md`: project-specific Explorer operations and safety/pre-training checks.
 - `docs/explorer/SKILL.md`: unchanged reference copy of the sibling course repo's `SKILL.md`,
   added 2026-10-22; related course notebooks/recipes are not vendored. Use the root guide for
@@ -114,7 +122,7 @@ Runtime hashes identify the actual run inputs. Datasets, weights, binaries, and 
 | Artifact | Purpose | Status |
 |---|---|---|
 | `fidip_env.yml` | Conda environment (`fidip`, Python 3.12.4, PyTorch 2.3.1, CUDA 12.1) | Present; not yet validated on Explorer |
-| `lib/Makefile` | Build Linux CPU/GPU NMS extensions | Present; not yet run |
+| `lib/Makefile` | Upstream native-build recipe | Reference only; validated build uses `tools/build_environment.sbatch` with temporary C generation |
 | `.env.example` | Documents optional secret names without values | Present |
 | `.env` | Local secrets | Not created; always gitignored and never inventoried by value |
 
@@ -264,8 +272,8 @@ Model files must not be committed.
 | Model | Expected repository path | Source/status | SHA-256 |
 |---|---|---|---|
 | Pretrained FiDIP HRNet | `models/hrnet_fidip.pth` | User-supplied original-folder download; present on Mac and Explorer, CPU strict-load/forward verified, baseline reproduced | `bfbf9df225674614652d5dbdd066daf71c9b9d7f3c31976b7ed33bb96af55d07` |
-| Pretrained FiDIP MobileNet | `models/mobile_fidip.pth` | Missing; FiDIP Google Drive folder linked from `README.md` | TODO |
-| DarkPose HRNet-W48 | `models/coco/w48_384x288.pth` | Missing; TGA Google Drive folder linked from `README.md` | TODO |
+| Pretrained FiDIP MobileNet | `models/mobile_fidip.pth` | Not used/not acquired; outside this HRNet study | Not applicable |
+| DarkPose HRNet-W48 | `models/coco/w48_384x288.pth` | Not used/not acquired; released FiDIP weights initialize this study | Not applicable |
 
 ### HRNet checkpoint acquisition and verification (2026-10-28)
 
@@ -320,7 +328,7 @@ Artifacts on Explorer:
 - Local xfer-retrieved copies: `output/baseline-test100-11450265/{metrics.json,predictions.json}`,
   `models/validation/checkpoint-11450222.json`, `log/baseline-evidence-11450265/`.
 
-Source is still uncommitted reviewed changes over `7bc14bc`, not a newly pushed revision. Key
+At the baseline run, source consisted of reviewed uncommitted changes over `7bc14bc`. Key
 SHA-256: YAML `cd1151abad97aac80400252c89e000c3ea7fca87975f87b06546e66cc1191157`;
 entry point `7c0902b27c9985671dbad0c31b8755ea2c270621455adb74e2635ca6c8b4a113`;
 baseline script `182fba6d0b1f648a07f4b67d062576b74aff9479e09027a303f46d7609406048`;
@@ -339,16 +347,188 @@ python tools/test_adaptive_model.py \
 | Run | Git commit | Config | Dataset version | Job/W&B ID | Metrics | Checkpoint/log path | Status |
 |---|---|---|---|---|---|---|---|
 | Baseline reproduction | `7bc14bc` + reviewed uncommitted changes; hashes above | HRNet config above | Original Test100, 100 images | CPU `11450222`, GPU `11450265` | AP 93.60717; AP50/AP75 98.52475; AR 94.6; AR50/AR75 99.0 | `output/baseline-test100-11450265/`, `models/hrnet_fidip.pth` | Reproduced published rounding; COMPLETED `0:0` |
+| Head-only continuation | At run time: local runtime over docs HEAD `bc66664`; runner hash below | 600 steps, batch8, Adam1e-5, seed7373, 833 trainable params | Approved filtered 1,150 train; original Test100 eval | GPU `11553889` / head | AP93.54721, delta -0.05996; AR94.5 | `output/small-screen-11553889/head/final_pose.pth` | COMPLETED `0:0`; no improvement in one-seed screen |
+| Stage4 + head continuation | Same runtime source and initialization | Same budget/schedule; 45,894,881 trainable params | Same train selection / Test100 | GPU `11553889` / stage4_head | AP93.19864, delta -0.40853; AR94.3 | `output/small-screen-11553889/stage4_head/final_pose.pth` | COMPLETED `0:0`; lower AP in screen |
+| Flip testing off | Original released weights, no training | Existing decoder/GT boxes, flip off only | Original Test100 | GPU `11553889` / original_flip_off | AP91.91587, delta -1.69130; AR93.4; ~2x CNN-forward speed only | `models/hrnet_fidip.pth`, run predictions/results | COMPLETED `0:0`; accuracy/compute tradeoff |
+| BN-buffer restoration | Inference diagnostic; learned parameters unchanged | Original BN running buffers substituted into saved stage4/head model | Original Test100 | GPU `11556720` / BN_buffers_restored | AP93.35239; +0.15376 vs trained, -0.25478 vs original; AR94.5 | `output/bounded-diagnostics-11556720/BN_buffers_restored.pth` | COMPLETED `0:0`; partial recovery, not a new best |
+| Fixed crop-scale TTA | Original released weights, no training | Crop factors0.9/1/1.1; flips; affine-aligned, coverage-normalized heatmap mean | Original Test100 | GPU `11556720` / three_crop_TTA | AP93.32060, delta -0.28657; AR94.5; 3x image views | Original weights plus diagnostic runner/protocol | COMPLETED `0:0`; more compute, lower AP; no sweep |
+
+### Fine-tuning readiness and diagnostic pilot (2026-11-01)
+
+- Helpers introduced for this run (now included in the source release): `tools/audit_finetune_readiness.py`, `tools/audit_finetune.sbatch`,
+  `tools/pilot_finetune.py`, `tools/pilot_finetune.sbatch`, `tests/test_finetune_pilot.py`.
+- CPU audit `11553238`: COMPLETED `0:0`, `d1027`, 25s script / 92s allocation. Three CPU resume
+  unit tests passed; source checkpoint and data payload/annotation hashes verified unchanged.
+- Reconfirmed 46 synthetic dimension mismatches and 4 real train/Test100 byte duplicates. Proposed
+  unflagged comparison pool is 1,150 records (196 real, 954 synthetic), NOT yet an approved split.
+  Original releases/working labels unchanged; no samples removed from the datasets.
+- Corrected planning assumption: author's `BalancedBatchSampler` already produces 1:1 real/synthetic
+  batches. A future 'more real' comparison must differ from that effective baseline, not pretend
+  the 200/1,000 image inventory was the author's sampling ratio. No five-run comparison started.
+- Admission JSON: `output/finetune-readiness-11553238.json`; audit stdout:
+  `slurm-logs/train-audit-11553238.out`; local xfer copies: `log/finetune-evidence-2026-11-01/`.
+- Diagnostic pilot `11553500`: gpu-short, typed V100-SXM2, 4 CPUs, 8G host RAM, 5m limit;
+  start deadline used to avoid a long queue. Started ~34s after submission on d1019, V100-SXM2-32GB.
+  H200 forecasts were long so none submitted. Pilot COMPLETED `0:0`, out of queue; 135s
+  allocation, 56s script, 44.277s Python body. No scientific AP result or full-data comparison yet.
+- Pilot uses only 32 explicitly verified examples (16 real/16 synthetic), batch 8, 50 optimizer
+  updates at Adam LR 1e-5 plus two 3-step branches for resume equivalence. Full pose model, FP32,
+  deterministic/TF32 off, supervised pose MSE only; original augmentation geometry retained.
+  This is not full-data training or adversarial FiDIP reproduction. No Test100 scoring/selection.
+- Output folder: `output/finetune-pilot-11553500/` contains `protocol.json`, `pilot-report.json`,
+  and `resume.pth` (764,835,130 bytes, step 50, pose+Adam+RNG; NOT a raw pose-only final model).
+  Finite loss/gradients, head updates, exact 3-step uninterrupted/restored pose/Adam/RNG equivalence,
+  and original checkpoint identity all verified. Original `models/hrnet_fidip.pth` remains immutable.
+- Steady median step 0.3895523s, GPU peak allocated 4.299 GiB / reserved 4.990 GiB, batch MaxRSS
+  1,492,904 KiB. Compute-only estimate 500 steps 3.246m / 1,000 steps 6.493m. These tiny-subset
+  timings include exhaustive gradient checks and exclude full-data I/O/evaluation/queue overhead.
+- Reports/protocol retrieved via xfer to local `output/finetune-pilot-11553500/`; checkpoint stays
+  in Explorer home only. CPU/GPU stdout and accounting copied to `log/finetune-evidence-2026-11-01/`.
+  All outputs gitignored. Both jobs completed; no active audit/pilot remains.
+- Training exclusions/repairs and independent development-validation protocol still require an
+  explicit choice. Filtering future training cannot undo possible prior Test100 exposure in the
+  released weights; a training-derived validation subset may also have been seen during pretraining.
+
+### Completed three-test screen (2026-11-01)
+
+User selected a smaller screen instead of expanded-data acquisition or the earlier five runs:
+head-only fine-tuning, final-stage+head fine-tuning, and original-checkpoint flip-off inference.
+The separate exclusion manifest is now approved for these trials: 1,150 retained records
+(196 real/954 synthetic), original data/labels and Test100 untouched. No manual label repairs.
+
+Both fine-tunes: original FiDIP initialization, 600 steps, batch8, balanced 1:1 replacement
+sampling, LR1e-5/Adam, seed7373, existing geometry augmentation, frozen early BatchNorm stats.
+Same step-indexed image/augmentation schedule. Final Test100 evaluation only, no checkpoint
+selection by Test100. Flip-off uses original weights; matched flip-on control must first reproduce
+93.60717 AP. Timing labels distinguish GPU CNN-forward measurements from full evaluation walltime.
+
+Sources introduced for this run: `tools/{prepare_small_screen.py,prepare_small_screen.sbatch,run_small_screen.py,run_small_screen.sbatch}`,
+`tests/test_small_screen.py`; local screen tests 4/4 and resume tests 3/3 passed.
+CPU preparation `11553804`: seven Linux unit tests and fresh payload/hash validation passed;
+script rc0/18s, but allocation later TIMEOUT 0:0 / 5m08s after remaining RUNNING despite successful
+script exit. Cause unverified; retained logs. Approved manifest `output/small-screen-profile-11553804.json`;
+log `slurm-logs/screen-prep-11553804.out`; both retrieved via xfer to `log/small-screen-evidence-2026-11-01/`.
+
+GPU `11553889` admitted from the verified complete CPU outputs without depending on its anomalous
+Slurm lifecycle; runtime independently hashes all pinned inputs. gpu-short, typed V100-SXM2,
+4CPU/8G/15m, latest-start deadline now+17m, d1022, V100-SXM2-32GB. COMPLETED `0:0`, out of queue:
+6m45s allocation, 6m18s script, 6m16s experiment stage. All three tests finished; original flip-on
+control exactly rechecked 93.6071706887983 AP. MaxRSS 3,476,404 KiB.
+Outputs: `output/small-screen-11553889/{protocol.json,results.json}`, per-variant predictions and
+300/600-step resume/final pose checkpoints; stdout `slurm-logs/small-screen-11553889.out`.
+Full-precision AP: head-only **93.5472078062278** (delta **-0.05996288257050253**), stage4+head
+**93.198637527681** (delta **-0.40853316111730464**), original flip-off **91.9158670222938**
+(delta **-1.6913036665045098**). AR94.5/94.3/93.4 respectively. Both fine-tunes verified 600 updates,
+head-weight changes, and unchanged frozen parameters/BN buffers. No statistical significance
+established from this single-seed screen. Original remains the best tested checkpoint.
+
+Paired warmed batch16 CNN-only median latency: flip on 13.00666 ms/original image vs off
+6.50483 ms/image, **1.99954x forward-only speedup**. Nine alternating-order repeats; excludes
+I/O, preprocessing, transfers, flip-back and decoding. Do not call it 2x application throughput.
+Single-pass eval wall times 5.779s/3.516s are cache/order affected, not a controlled app benchmark.
+
+Checkpoint SHA-256:
+- Head: `9a8f03f65328baceb05ce36a111d9d7b71337d182e4a59dbfa241ee4e5a667ff`.
+- Stage4/head: `b146f8c25d5c45f882603f858d1c532d054e1caedc687fedb41e154fd3be3f6e`.
+- Selection profile: `42c193dc87f62eb0ba1aba60544bd95e4a4575d651c80c0320a05fde9cf6edc7`.
+- Runner: `3c44a515adbef57b2f913ab235ad27096c430eded53a705f7fa6227b92f0e722`.
+
+Human summary `output/small-screen-11553889/summary.md`; complete results/protocols/predictions
+retrieved via xfer to the same local run folder. Prep/profile/stdout/accounting evidence under
+`log/small-screen-evidence-2026-11-01/`. Large checkpoints remain Explorer home only. New final
+pose checkpoints are raw state dicts; 300/600-step resume files also contain optimizer/RNG/protocol
+and must not be passed directly to the original evaluation CLI.
+
+No active jobs remain. No expanded datasets, new source/data publication, original-label edits,
+raw-data deletions, new Git commits/pushes, or queued-job cancellations. Do not launch more training
+merely because these experiments did not improve the baseline; agree on a new hypothesis first.
+
+### Bounded follow-up diagnostics (2026-11-02 UTC)
+
+User authorized existing-artifact analysis and only two additional inference hypotheses, with a
+10–15 GPU-minute ceiling; no training. One 10m-capped allocation actually used **47 seconds**.
+
+CPU `11556695` COMPLETED0:0,17s: nine Linux geometry/BN tests passed; original/trained checkpoint
+hashes checked; existing saved predictions analyzed. Head-only per-person OKS correlation to
+original0.999928, all100 images within0.01OKS. Stage4 correlation0.977266:5 improved>=0.01,
+6 worsened>=0.01,89 within0.01. Per-person OKS/joint distance is not confidence-ranked COCO AP.
+BN393 buffers changed in131 modules. CPU report `output/bounded-analysis-11556695.json`.
+
+GPU `11556720` COMPLETED0:0,47s allocation/45s script, V100-SXM2-32GB/d1022,2CPU/8G.
+Original and trained controls exactly reproduced93.6071706887983 and93.198637527681 AP.
+- BN-only restoration: **93.35239311605797 AP**, +0.153755588376967 vs trained, but
+  -0.25477757274033763 vs original. All learned parameters/BN affine weights retained.
+  Supports a conditional normalization contribution, not that all degradation is caused by BN
+  or that freezing BN during training will necessarily beat the released model.
+- Fixed crop ensemble: **93.32060253033816 AP**, -0.28656815846014183 vs original.
+  Crop extents0.9/1/1.1 at unchanged288x384 input; aligned via actual repo(width-1) affine geometry,
+  coverage-normalized uniform heatmap fusion before original decoder; flip retained. No scale sweep.
+  600 forward-image views vs200; CNN time3.934s vs1.351s. Single-pass wall9.478s vs3.682s is not a
+  randomized app benchmark. This particular preset added cost and reduced accuracy.
+
+Reports/protocols/predictions/human summary: `output/bounded-diagnostics-11556720/` on Mac/Explorer.
+CPU/stdout/accounting xfer copies: `log/bounded-diagnostics-evidence-2026-11-02/`.
+BN-restored raw state on Explorer only, SHA256
+`fe0942279648bc817e450823bbf37adad4bae0fe3da7998e6cbd7b2787b664e8`.
+Runner SHA256 `46f42d172983818e51aa4f84cec7504ebbca582c6d8f5920fdfd13f21d3ba0f3`;
+helper `5a7ebf0181f4e25102119cd082f9727b0c6af3548642ed371c46b550d34bb107`;
+CPU analysis artifact `deb88e796a55fdfb80ffb8dd2f443c1d21106b171805cbf27259056a3689fca9`.
+Source weights/datasets unchanged. Both diagnostics finished below baseline. No active jobs,
+new fine-tuning, retries, parameter sweeps or Git pushes. STOP at the agreed gate; further work
+requires a new hypothesis/authorization. Findings are exploratory on previously inspected Test100.
+
+### Recorded results and reproduction checks
+
+- `reproducibility/results/baseline.json`: original checkpoint evaluation, job11450265.
+- `reproducibility/results/small-screen.json`: matched controls, two fine-tunes and flip-off,
+  job11553889.
+- `reproducibility/results/bounded-diagnostics.json`: BN restoration and fixed crop TTA with
+  matched controls, job11556720.
+- These are unchanged copies of the original metric JSONs, including recorded protocols and
+  checkpoint details. `reproducibility/check_results.py` checks AP/final-step/freeze/control
+  consistency without datasets or model execution. This is not a new AP computation.
+- Optional independent COCO rescoring needs the original Test100 annotation and saved prediction
+  files. Those files and full reference audits remain in the working checkouts, not in Git.
+- Portable diagnostic path/hash/control-AP arguments retain historical defaults and have local
+  argument/root-boundary tests. They were not separately rerun on a GPU.
+- Required workflow files are `SKILL.md`, `AGENT.md` and this manifest; `AGENTS.md` is the
+  canonical scientific notebook. The original checkpoint remains selected; no bonus is claimed.
 
 ## Final reported result
 
-No final improvement run selected yet. The reproduced baseline above is the comparison reference.
-Fill this section after controlled improvement experiments are reproduced and verified:
+**Selected:** original released HRNet-W48 FiDIP with flip testing. It remains best among all tested
+variants; no verified improvement or bonus is claimed. This reproduces checkpoint evaluation,
+not the authors' original training process.
 
-- Run ID: TODO
-- Git commit: TODO
-- Config: TODO
-- Dataset version: TODO
-- Checkpoint path and SHA-256: TODO
-- AP/AP50/AP75/AR: TODO
-- Evaluation command and log path: TODO
+- Run ID: baseline GPU `11450265`, CPU checkpoint admission `11450222`; later matched controls
+  in `11553889` and `11556720` reproduced the same AP.
+- Revision: scored runtime was `7bc14bc` plus reviewed uncommitted fixes (hashes in the baseline
+  section/logs); later documentation HEAD `bc66664`. No fabricated clean runtime commit.
+  Recorded outputs are copied unchanged under `reproducibility/results/`; the original run inputs
+  and source hashes are recorded above. The later source-release commit is `6aa9e7b`; its optional
+  diagnostic path/control parameters were locally tested, not a new scored GPU rerun.
+- Config: `experiments/coco/hrnet/w48_384x288_adam_lr1e-3_infant.yaml`, SHA-256
+  `cd1151abad97aac80400252c89e000c3ea7fca87975f87b06546e66cc1191157`.
+- Dataset: original SyRIP Test100, 100 samples; annotation SHA-256
+  `8b299a879a95913483498e3f2115a826ac23ebc5262c3efb8d65f63718e3194c`.
+- Checkpoint: `models/hrnet_fidip.pth`, 255,354,649 bytes, SHA-256
+  `bfbf9df225674614652d5dbdd066daf71c9b9d7f3c31976b7ed33bb96af55d07`.
+- Conditions: GT boxes, flip/postprocess on, 384-high × 288-wide, batch16, V100-SXM2-32GB;
+  official decoder/OKS rescoring/NMS/COCO evaluator retained. Debug rendering disabled.
+- Metrics (percent): AP **93.6071706887983**, AP50/AP75 **98.52475247524751**,
+  AR **94.6**, AR50/AR75 **99.0**. Published AP **93.6**, matched after rounding.
+- Evidence: `output/baseline-test100-11450265/metrics.json`, saved predictions and
+  `log/baseline-evidence-11450265/baseline-11450265.out`. The metric JSON is also available at
+  `reproducibility/results/baseline.json`; full logs and predictions remain local.
+- Exact evaluation invocation (inside the admitted GPU allocation):
+
+```sh
+python -u tools/test_adaptive_model.py \
+  --cfg experiments/coco/hrnet/w48_384x288_adam_lr1e-3_infant.yaml \
+  TEST.MODEL_FILE models/hrnet_fidip.pth TEST.USE_GT_BBOX True \
+  DATASET.ROOT data/syrip/ OUTPUT_DIR output/baseline-test100-11450265 \
+  LOG_DIR log/baseline-test100-11450265 DEBUG.DEBUG False PRINT_FREQ 1
+```
+
+`tools/evaluate_baseline.sbatch` also performs independent full-precision rescoring. New reruns
+must use their own output/job IDs; see the reproduction guide. The original checkpoint/data remain unchanged.
